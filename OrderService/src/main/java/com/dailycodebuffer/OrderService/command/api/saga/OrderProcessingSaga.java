@@ -77,8 +77,8 @@ public class OrderProcessingSaga {
                 event.getOrderId());
         try {
 
-            if(true)
-                throw new Exception();
+//            if(true)
+//                throw new Exception();
 
             ShipOrderCommand shipOrderCommand
                     = ShipOrderCommand

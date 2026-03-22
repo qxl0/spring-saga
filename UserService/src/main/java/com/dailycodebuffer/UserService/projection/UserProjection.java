@@ -12,19 +12,20 @@ public class UserProjection {
     @QueryHandler
     public User getUserPaymentDetails(GetUserPaymentDetailsQuery query) {
         //Ideally Get the details from the DB
+        // Here we are hardcoding the details for the sake of simplicity
         CardDetails cardDetails
                 = CardDetails.builder()
-                .name("Shabbir Dawoodi")
-                .validUntilYear(2022)
-                .validUntilMonth(01)
+                .name("Qiang Li")
+                .validUntilYear(2028)
+                .validUntilMonth(05)
                 .cardNumber("123456789")
                 .cvv(111)
                 .build();
 
         return User.builder()
                 .userId(query.getUserId())
-                .firstName("Shabbir")
-                .lastName("Dawoodi")
+                .firstName("Qiang")
+                .lastName("Li")
                 .cardDetails(cardDetails)
                 .build();
     }

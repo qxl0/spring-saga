@@ -19,16 +19,9 @@ public class ProductEventsHandler {
     }
 
     @EventHandler
-    public void on(ProductCreatedEvent event) throws Exception {
-        Product product =
-                new Product();
-        BeanUtils.copyProperties(event,product);
+    public void on(ProductCreatedEvent event) {
+        Product product = new Product();
+        BeanUtils.copyProperties(event, product);
         productRepository.save(product);
-        throw new Exception("Exception Occurred");
-    }
-
-    @ExceptionHandler
-    public void handle(Exception exception) throws Exception {
-        throw exception;
     }
 }
