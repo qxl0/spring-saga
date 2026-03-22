@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+  axonserver-1:
+    image: docker.axoniq.io/axoniq/axonserver:2025.2.6
+    pull_policy: always
+    hostname: axonserver-1
+    environment:
+      - axoniq_console_authentication=cf7cc932-0-asc:e909dbcc94554c8db5a6cfd8dd79d129
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+      - '8224:8224'
+    networks:
+      - axon-server
+
+networks:
+  axon-server:

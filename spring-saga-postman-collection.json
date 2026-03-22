@@ -1,0 +1,540 @@
+{
+  "info": {
+    "_postman_id": "spring-saga-collection-v1",
+    "name": "Spring Saga - All Services",
+    "description": "Test collection for Spring Saga microservices (Spring Boot 3.4.1 + Axon 4.10.3).\n\n**PREREQUISITE:** Axon Server must be running before any request works.\n- Download: https://axoniq.io/download\n- Run: java -jar axonserver.jar\n- Dashboard: http://localhost:8024\n\n**Service ports:**\n- ProductService: 8081\n- OrderService: 9091\n- UserService: 9092\n- PaymentService: 9093 (event-driven, no REST)\n- ShipmentService: 9094 (event-driven, no REST)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "productServiceUrl", "value": "http://localhost:8081", "type": "string" },
+    { "key": "orderServiceUrl",   "value": "http://localhost:9091", "type": "string" },
+    { "key": "userServiceUrl",    "value": "http://localhost:9092", "type": "string" },
+    { "key": "productId",         "value": "",                      "type": "string", "description": "Set automatically by Create Product test" },
+    { "key": "orderId",           "value": "",                      "type": "string", "description": "Set automatically by Create Order test" },
+    { "key": "userId",            "value": "user-001",              "type": "string" },
+    { "key": "addressId",         "value": "address-001",           "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1 - ProductService (port 8081)",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"iPhone 15 Pro\",\n  \"price\": 999.99,\n  \"quantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Creates a new product. Sends CreateProductCommand via Axon CommandGateway.\nReturns the generated productId (UUID string).\nAxon Server must be running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is a non-empty productId string', function () {",
+                  "    var body = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(body).to.be.a('string');",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "    // Save productId for subsequent requests",
+                  "    pm.collectionVariables.set('productId', body);",
+                  "    console.log('Created productId:', body);",
+                  "});",
+                  "",
+                  "pm.test('Response time < 5000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Product - Budget Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"USB Cable\",\n  \"price\": 9.99,\n  \"quantity\": 500\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Creates a second product with different data to seed the catalogue."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns a productId', function () {",
+                  "    var body = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(body).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Returns all products via Axon QueryGateway (GetProductsQuery).\nRequires Axon Server running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is a JSON array', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('At least one product exists', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('Products have expected fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.length > 0) {",
+                  "        pm.expect(json[0]).to.have.property('name');",
+                  "        pm.expect(json[0]).to.have.property('price');",
+                  "        pm.expect(json[0]).to.have.property('quantity');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Response time < 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 - UserService (port 9092)",
+      "item": [
+        {
+          "name": "Get User Payment Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{userServiceUrl}}/users/{{userId}}",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Returns user payment details for the given userId.\nThe UserProjection returns hardcoded demo data for any userId.\nRequires Axon Server running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has user fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('userId');",
+                  "    pm.expect(json).to.have.property('firstName');",
+                  "    pm.expect(json).to.have.property('lastName');",
+                  "    pm.expect(json).to.have.property('cardDetails');",
+                  "});",
+                  "",
+                  "pm.test('userId matches request', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.userId).to.eql(pm.collectionVariables.get('userId'));",
+                  "});",
+                  "",
+                  "pm.test('CardDetails is present and complete', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.cardDetails).to.have.property('name');",
+                  "    pm.expect(json.cardDetails).to.have.property('cardNumber');",
+                  "    pm.expect(json.cardDetails).to.have.property('validUntilYear');",
+                  "    pm.expect(json.cardDetails).to.have.property('validUntilMonth');",
+                  "    pm.expect(json.cardDetails).to.have.property('cvv');",
+                  "});",
+                  "",
+                  "pm.test('Response time < 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Payment Details - Custom userId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{userServiceUrl}}/users/custom-user-999",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["users", "custom-user-999"]
+            },
+            "description": "Tests that any userId returns user details (demo projection returns hardcoded data)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has user data', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('userId');",
+                  "    pm.expect(json.userId).to.eql('custom-user-999');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 - OrderService (port 9091)",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"userId\": \"{{userId}}\",\n  \"addressId\": \"{{addressId}}\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Creates an order and triggers the Order Saga.\n\nSaga flow:\n1. OrderCreatedEvent published\n2. OrderProcessingSaga starts, sends ValidatePaymentCommand to PaymentService\n3. PaymentService processes payment, emits PaymentProcessedEvent or PaymentCancelledEvent\n4. Saga sends ShipOrderCommand to ShipmentService (if payment ok)\n5. ShipmentService ships, emits OrderShippedEvent\n6. Saga sends CompleteOrderCommand to OrderService\n\nAll services + Axon Server must be running for the full saga to execute.\n\nNote: productId must be set (run Create Product first, or set {{productId}} manually)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response says Order Created', function () {",
+                  "    var body = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(body).to.eql('Order Created');",
+                  "});",
+                  "",
+                  "pm.test('Response time < 10000ms (saga completes)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Order - Inline productId",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"REPLACE_WITH_ACTUAL_PRODUCT_ID\",\n  \"userId\": \"user-001\",\n  \"addressId\": \"address-002\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Order with a hardcoded productId. Replace REPLACE_WITH_ACTUAL_PRODUCT_ID with a real productId from Create Product response."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response says Order Created', function () {",
+                  "    var body = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(body).to.eql('Order Created');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 - End-to-End Saga Flow",
+      "description": "Run these requests in order to exercise the complete Order Saga:\n1. Create Product → saves productId to collection variable\n2. Get User → confirms UserService is up\n3. Create Order → triggers full Axon Saga across all services\n4. Get All Products → verify product list after order",
+      "item": [
+        {
+          "name": "Step 1 - Create Product (E2E)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MacBook Pro M3\",\n  \"price\": 1999.00,\n  \"quantity\": 50\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Product created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var productId = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(productId).to.be.a('string').and.not.empty;",
+                  "    pm.collectionVariables.set('productId', productId);",
+                  "    console.log('[E2E Step 1] productId saved:', productId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 2 - Get User (E2E)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{userServiceUrl}}/users/{{userId}}",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('UserService is up and returns user', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('userId');",
+                  "    pm.expect(json).to.have.property('cardDetails');",
+                  "    console.log('[E2E Step 2] User:', json.firstName, json.lastName);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 3 - Create Order / Trigger Saga (E2E)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"userId\": \"{{userId}}\",\n  \"addressId\": \"{{addressId}}\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Order created and saga triggered', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var body = pm.response.text().replace(/\"/g, '').trim();",
+                  "    pm.expect(body).to.eql('Order Created');",
+                  "    console.log('[E2E Step 3] Order saga triggered for productId:', pm.collectionVariables.get('productId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 4 - Verify Products List (E2E)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Product catalogue is queryable after saga', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "    pm.expect(json.length).to.be.greaterThan(0);",
+                  "    console.log('[E2E Step 4] Total products in catalogue:', json.length);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 - Health / Actuator",
+      "description": "Spring Boot Actuator health checks (if spring-boot-starter-actuator is on classpath).",
+      "item": [
+        {
+          "name": "ProductService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{productServiceUrl}}/actuator/health",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('ProductService health check', function () {",
+                  "    // 200 if actuator is present, 404 if not added to pom",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "    if (pm.response.code === 200) {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json.status).to.eql('UP');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OrderService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orderServiceUrl}}/actuator/health",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('OrderService health check', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json().status).to.eql('UP');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UserService Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{userServiceUrl}}/actuator/health",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('UserService health check', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json().status).to.eql('UP');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
