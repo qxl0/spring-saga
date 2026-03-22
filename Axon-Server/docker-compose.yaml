@@ -10,8 +10,17 @@ services:
       - '8024:8024'
       - '8124:8124'
       - '8224:8224'
+    volumes:
+      - axonserver-events:/axonserver/events
+      - axonserver-log:/axonserver/log
+      - axonserver-data:/axonserver/data
     networks:
       - axon-server
+
+volumes:
+  axonserver-events:
+  axonserver-log:
+  axonserver-data:
 
 networks:
   axon-server:
