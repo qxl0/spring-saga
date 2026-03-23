@@ -1,0 +1,20 @@
+[versions]
+spring-boot            = "3.2.5"
+spring-dependency-mgmt = "1.1.5"
+axon                   = "4.9.3"
+lombok                 = "1.18.36"
+guava                  = "31.0.1-jre"
+
+[libraries]
+spring-boot-starter          = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-web      = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-test     = { module = "org.springframework.boot:spring-boot-starter-test" }
+axon-spring-boot-starter     = { module = "org.axonframework:axon-spring-boot-starter", version.ref = "axon" }
+lombok                       = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+h2                           = { module = "com.h2database:h2" }
+guava                        = { module = "com.google.guava:guava", version.ref = "guava" }
+
+[plugins]
+spring-boot            = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-mgmt = { id = "io.spring.dependency-management", version.ref = "spring-dependency-mgmt" }

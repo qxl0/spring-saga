@@ -1,0 +1,12 @@
+rootProject.name = 'spring-saga'
+
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
+
+// gradle/libs.versions.toml is auto-discovered by Gradle 7.4+
+
+include 'CommonService'
+include 'OrderService'
+include 'ProductService'
+include 'PaymentService'
+include 'ShipmentService'
+include 'UserService'

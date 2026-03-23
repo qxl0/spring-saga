@@ -1,0 +1,43 @@
+plugins {
+    id 'io.spring.dependency-management' version '1.1.5' apply false
+    id 'org.springframework.boot' version '3.2.5' apply false
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'com.mtbank'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.2.5'
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        compileOnly libs.lombok
+        annotationProcessor libs.lombok
+        testImplementation libs.spring.boot.starter.test
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+}
