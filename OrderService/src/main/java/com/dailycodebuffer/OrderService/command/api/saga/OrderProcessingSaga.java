@@ -52,6 +52,7 @@ public class OrderProcessingSaga {
             log.error(e.getMessage());
             //Start the Compensating transaction
             cancelOrderCommand(event.getOrderId());
+            return;
         }
 
         ValidatePaymentCommand validatePaymentCommand

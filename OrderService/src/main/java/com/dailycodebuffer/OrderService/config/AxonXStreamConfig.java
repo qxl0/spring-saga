@@ -1,4 +1,4 @@
-package com.dailycodebuffer.UserService.config;
+package com.dailycodebuffer.OrderService.config;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
